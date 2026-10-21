@@ -113,12 +113,13 @@ mạnh tới số ô đỏ trong phần diện tích chung.
 ### Nhận định trực quan: biến dạng map trong high-fidelity
 
 Ảnh high-fidelity không chỉ khác về biên map. So với baseline trong **cùng
-maze**, nó có mảng nhiễu lớn ở phải/dưới, đoạn tường kéo dài hoặc đứt đoạn, và
-cấu trúc giống nhau xuất hiện ở nhiều vị trí. Đây là các dấu hiệu của:
+maze**, nó bị **chồng map nội bộ**: mảng nhiễu lớn ở phải/dưới, đoạn tường kéo
+dài hoặc đứt đoạn, và cấu trúc giống nhau xuất hiện ở nhiều vị trí. Đây là các
+dấu hiệu của:
 
 - **Map distortion:** hình học tường bị dịch hoặc méo.
-- **Ghosting:** một tường/vật thể được ghi nhiều lần ở các pose không trùng
-  nhau.
+- **Ghosting (chồng map):** một tường/vật thể được ghi nhiều lần ở các pose
+  không trùng nhau. Đây là hiện tượng nổi bật nhất ở map high-fidelity.
 - **Mapping artifacts:** các mảng occupied/free/unknown không phản ánh hình
   học thật của môi trường.
 

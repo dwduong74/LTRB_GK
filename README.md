@@ -174,7 +174,7 @@ mất ổn định ở world phức tạp.
 - Cảnh báo GLSL của RViz là vấn đề render/OpenGL. Trong các lượt này RViz vẫn
   hiển thị map nên chưa có dấu hiệu dữ liệu SLAM bị hỏng.
 
-Ghi chú chi tiết: [`complex_world_runtime_report.md`](../Lap_trinh_robot/bcr_bot_ws/src/tb3_slam_map_analysis/complex_world_runtime_report.md).
+Ghi chú chi tiết: [`complex_world_runtime_report.md`](complex_world_runtime_report.md).
 
 ## Kết luận
 

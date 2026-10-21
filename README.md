@@ -35,17 +35,17 @@ Các tham số frame, sensor và solver được giữ giống nhau để tập 
 | `minimum_time_interval` | 0,50 s | 0,15 s | High-fidelity dùng scan thường xuyên hơn, giúp mô tả lúc robot quay hoặc đi gần vật cản, đổi lại tăng tải xử lý. |
 | `minimum_travel_distance` | 0,50 m | 0,15 m | High-fidelity thêm node pose graph dày hơn. Đường biên có thể mịn hơn, nhưng pose graph lớn hơn. |
 | `minimum_travel_heading` | 0,50 rad | 0,15 rad | High-fidelity ghi nhận nhiều scan khi quay; hữu ích ở góc, cửa và ngã rẽ. |
-| `map_update_interval` | 5,0 s | 1,0 s | High-fidelity cập nhật `/map` trên RViz nhanh hơn. Tham số này chủ yếu ảnh hưởng tần suất xuất bản/hiển thị, không tự làm tăng độ phân giải map. |
+| `map_update_interval` | 5,0 s | 1,0 s | High-fidelity cập nhật `/map` trên RViz nhanh hơn. Tham số này chủ yếu ảnh hưởng tần suất xuất bản/hiển thị, không tự là nguyên nhân làm lệch map. |
 | `scan_buffer_size` | 10 | 30 | Giữ nhiều scan gần để ghép cục bộ ổn định hơn, nhưng tăng bộ nhớ và tính toán. |
 | `link_scan_maximum_distance` | 1,5 m | 3,0 m | Mở rộng vùng tìm liên kết cục bộ; chịu sai số odometry tốt hơn nhưng có nhiều phương án ghép hơn. |
 | `loop_search_maximum_distance` | 3,0 m | 5,0 m | Tìm đóng vòng trong vùng rộng hơn khi robot quay lại nơi cũ; có thể giảm drift ở world lớn. |
 | `loop_match_minimum_chain_size` | 10 | 8 | High-fidelity xét loop closure sớm hơn. |
-| Ngưỡng match fine/coarse | 0,10 / 0,35 / 0,45 | 0,08 / 0,30 / 0,40 | High-fidelity dễ chấp nhận liên kết hơn. Điều này hữu ích khi scan thưa hoặc world lớn, nhưng nếu môi trường lặp lại/hành lang giống nhau thì tăng nguy cơ liên kết sai. |
+| Ngưỡng match fine/coarse | 0,10 / 0,35 / 0,45 | 0,08 / 0,30 / 0,40 | High-fidelity dễ chấp nhận liên kết hơn. Điều này hữu ích khi scan thưa hoặc world lớn, nhưng nếu hệ số nhiều quá sẽ kéo pose graph lệch. |
 
 Các tham số `solver_plugin`, Ceres solver, scan matching, correlation search,
 `do_loop_closing`, `transform_publish_period`, TF buffer và các penalty được
 giữ nguyên. Vì vậy chúng không phải nguyên nhân trực tiếp tạo khác biệt giữa
-hai profile trong thí nghiệm này.
+two profile trong thí nghiệm này.
 
 ## Lượt chạy 1: `turtlebot3_world` mặc định, phạm vi nhỏ
 
@@ -72,17 +72,17 @@ cho kết quả nhất quán; không có bằng chứng high-fidelity làm map x
 
 ### Ảnh map và vùng sai khác — lượt 1
 
-**Baseline**
-
-![Map baseline của lượt 1](figures/run1_baseline_map.png)
-
-**High-fidelity**
-
-![Map high-fidelity của lượt 1](figures/run1_high_fidelity_map.png)
-
-**Vùng sai khác**
-
-![Ô sai khác của lượt 1; màu đỏ là occupied/free không trùng nhau](figures/run1_difference.png)
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><img src="figures/run1_baseline_map.png" width="420" alt="Map baseline của lượt 1" /></td>
+      <td align="center"><img src="figures/run1_high_fidelity_map.png" width="420" alt="Map high-fidelity của lượt 1" /></td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><img src="figures/run1_difference.png" width="700" alt="Ô sai khác của lượt 1" /></td>
+    </tr>
+  </table>
+</div>
 
 ## Lượt chạy 2: `tb3_complex_maze`, phạm vi lớn hơn
 
@@ -103,7 +103,7 @@ Kết quả từ [`baseline2_vs_high_fidelity2/comparison_report.md`](baseline2_
 | Vùng lớn nhất | 831 ô = 2,078 m² |
 
 Đây là lượt đo thứ hai, thực hiện trong maze lớn và phức tạp hơn world mặc
-định ở lượt 1. Trong chính lượt maze, map high-fidelity có biên thấp hơn map
+default ở lượt 1. Trong chính lượt maze, map high-fidelity có biên thấp hơn map
 baseline **3,01 m theo Y** và cao hơn 61 hàng lưới. Điều này cho thấy hai lần
 lái trong cùng maze có độ bao phủ khác nhau, hoặc pose graph đã đặt map frame
 khác nhau. Vì map high-fidelity chứa toàn bộ phạm vi của baseline, công cụ
@@ -146,22 +146,22 @@ Các nguyên nhân cần kiểm tra theo thứ tự ưu tiên:
    nên sẽ lộ lỗi này rõ hơn baseline.
 
 Vì vậy, “high-fidelity” chỉ mô tả việc dùng scan và tìm liên kết dày/rộng hơn;
-nó không bảo đảm map chính xác hơn. Với bộ tham số hiện tại, nó đang làm SLAM
-mất ổn định ở world phức tạp.
+ nó không bảo đảm map chính xác hơn. Với bộ tham số hiện tại, nó đang làm SLAM
+ mất ổn định ở world phức tạp.
 
 ### Ảnh map và vùng sai khác — lượt 2
 
-**Baseline**
-
-![Map baseline của lượt 2 trong maze](figures/run2_baseline_map.png)
-
-**High-fidelity**
-
-![Map high-fidelity của lượt 2 trong maze](figures/run2_high_fidelity_map.png)
-
-**Vùng sai khác**
-
-![Ô sai khác của lượt 2; màu đỏ là occupied/free không trùng nhau](figures/run2_difference.png)
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><img src="figures/run2_baseline_map.png" width="420" alt="Map baseline của lượt 2 trong maze" /></td>
+      <td align="center"><img src="figures/run2_high_fidelity_map.png" width="420" alt="Map high-fidelity của lượt 2 trong maze" /></td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><img src="figures/run2_difference.png" width="700" alt="Ô sai khác của lượt 2" /></td>
+    </tr>
+  </table>
+</div>
 
 ## Log vận hành đã quan sát
 

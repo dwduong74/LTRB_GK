@@ -110,22 +110,43 @@ khác nhau. Vì map high-fidelity chứa toàn bộ phạm vi của baseline, c�
 không đếm ô ngoài phạm vi chung; tuy nhiên khác biệt độ bao phủ vẫn ảnh hưởng
 mạnh tới số ô đỏ trong phần diện tích chung.
 
-Các cụm sai khác lớn trải dài theo hàng mét, không còn là vài pixel mép tường
-như lượt 1. Nguyên nhân hợp lý nhất là tổng hợp của ba yếu tố:
+### Nhận định trực quan: biến dạng map trong high-fidelity
 
-1. Robot được lái thủ công qua hai tuyến hoặc quãng đường không hoàn toàn
-   giống nhau trong cùng maze; world lớn có nhiều nhánh nên chênh lệch này
-   tăng nhanh.
-2. High-fidelity thêm node scan dày hơn và thử loop closure rộng/sớm hơn. Khi
-   tối ưu pose graph, các tường đã quét trước đó có thể dịch vài ô so với
-   baseline, tạo dải đỏ dài.
-3. High-fidelity dùng ngưỡng match thấp hơn. Trong maze có nhiều vách song
-   song hoặc hình học lặp lại, nó có thể nhận thêm liên kết hữu ích nhưng cũng
-   nhạy hơn với liên kết chưa tốt.
+Ảnh high-fidelity không chỉ khác về biên map. So với baseline trong **cùng
+maze**, nó có mảng nhiễu lớn ở phải/dưới, đoạn tường kéo dài hoặc đứt đoạn, và
+cấu trúc giống nhau xuất hiện ở nhiều vị trí. Đây là các dấu hiệu của:
 
-Kết quả **không đủ để kết luận high-fidelity kém hơn**, vì đầu vào hai lượt
-chạy chưa được kiểm soát giống nhau. Nó cho thấy world lớn làm phép so sánh
-nhạy với độ bao phủ, tuyến di chuyển và các quyết định loop closure.
+- **Map distortion:** hình học tường bị dịch hoặc méo.
+- **Ghosting:** một tường/vật thể được ghi nhiều lần ở các pose không trùng
+  nhau.
+- **Mapping artifacts:** các mảng occupied/free/unknown không phản ánh hình
+  học thật của môi trường.
+
+Do baseline cũng dùng cùng TurtleBot3, lidar, Gazebo và world nhưng giữ được
+tường thẳng/liên tục, dữ liệu hiện có **không ưu tiên giả thuyết lidar bị
+lỗi**. Vấn đề có nhiều khả năng nằm ở chuỗi định vị–ghép scan–tối ưu pose
+graph của cấu hình high-fidelity. Tuyến lái khác nhau vẫn là yếu tố gây nhiễu
+thực nghiệm, nhưng không giải thích đầy đủ ghosting và biến dạng hình học đã
+thấy.
+
+Các nguyên nhân cần kiểm tra theo thứ tự ưu tiên:
+
+1. **Loop closure sai hoặc quá mạnh.** High-fidelity tìm loop xa 5,0 m thay vì
+   3,0 m, xét từ 8 node thay vì 10, và hạ ngưỡng coarse/fine xuống 0,30/0,40.
+   Trong maze có vách song song/hình học lặp lại, cấu hình này dễ nhận nhầm
+   hai vị trí giống nhau và kéo cả pose graph lệch sau khi tối ưu.
+2. **Local scan matching chấp nhận liên kết mơ hồ.** `link_scan_maximum_distance`
+   tăng 1,5 → 3,0 m, `scan_buffer_size` tăng 10 → 30 và ngưỡng fine giảm
+   0,10 → 0,08. Nhiều scan hơn chỉ hữu ích khi pose/TF giữa các scan chính xác;
+   nếu không, nhiễu sẽ được tích lũy thành ảnh bóng.
+3. **Odometry, TF hoặc đồng bộ thời gian.** Odometry sai, TF
+   `odom → base_footprint → base_scan` không liên tục, hoặc timestamp scan lệch
+   pose sẽ làm mỗi scan được đặt sai vị trí. High-fidelity dùng scan dày hơn
+   nên sẽ lộ lỗi này rõ hơn baseline.
+
+Vì vậy, “high-fidelity” chỉ mô tả việc dùng scan và tìm liên kết dày/rộng hơn;
+nó không bảo đảm map chính xác hơn. Với bộ tham số hiện tại, nó đang làm SLAM
+mất ổn định ở world phức tạp.
 
 ### Ảnh map và vùng sai khác — lượt 2
 
@@ -160,17 +181,23 @@ Ghi chú chi tiết: [`complex_world_runtime_report.md`](../Lap_trinh_robot/bcr_
    1,10% và chỉ có hai cụm rất nhỏ.
 2. Với `tb3_complex_maze` lớn hơn, sai khác 6,91% không được so trực tiếp với
    1,10% của world mặc định; geometry, diện tích khám phá và tuyến lái đã khác.
-3. Profile high-fidelity phù hợp khi cần bản đồ chi tiết hơn ở góc, cửa, lối
-   hẹp và world lớn, với chi phí CPU/RAM cao hơn và thời gian tối ưu pose graph
-   dài hơn.
-4. Lượt maze cho sai khác 6,91%, chủ yếu phản ánh thực nghiệm chưa đồng nhất
-   về độ bao phủ/tuyến lái cùng với độ nhạy cao hơn của loop closure; đây chưa
-   phải bằng chứng định lượng rằng một profile chính xác hơn profile kia.
+3. Trong cùng `tb3_complex_maze`, ảnh high-fidelity có ghosting và biến dạng
+   hình học nghiêm trọng. Đây là lỗi SLAM của cấu hình hiện tại, không phải lợi
+   ích từ việc tăng mật độ scan.
+4. Cần ưu tiên kiểm tra loop closure, local scan matching, odometry, TF và
+   timestamp; chưa có bằng chứng để quy kết lidar hỏng.
 
 ## Đề xuất lượt đánh giá tiếp theo
 
-Để đo riêng tác động tham số, reset Gazebo trước mỗi profile, dùng cùng pose
-spawn và cùng tuyến di chuyển. Tốt nhất ghi một rosbag gồm `/scan`, `/odom`,
-`/tf` và `/clock`, sau đó phát lại đúng cùng dữ liệu cho cả hai profile. Khi
-đó, so sánh `difference.ppm`, số vùng đỏ lớn và thời gian/CPU sẽ cho kết luận
-tin cậy hơn về độ chính xác và chi phí tính toán.
+1. Reset Gazebo trước mỗi profile, dùng cùng pose spawn và cùng tuyến di
+   chuyển. Tốt nhất ghi một rosbag gồm `/scan`, `/odom`, `/tf` và `/clock`,
+   sau đó phát lại đúng cùng dữ liệu cho cả hai profile.
+2. Chạy high-fidelity với `do_loop_closing: false`. Nếu ghosting biến mất, bật
+   lại loop closure với `loop_search_maximum_distance: 3.0`,
+   `loop_match_minimum_chain_size: 10`, coarse `0.35` và fine `0.45`.
+3. Nếu vẫn méo, trả `link_scan_maximum_distance` về 1,5 m, `scan_buffer_size`
+   về 10 và `link_match_minimum_response_fine` về 0,10; sau đó tăng từng tham
+   số một để tìm ngưỡng gây mất ổn định.
+4. Kiểm tra TF tree chỉ có một nhánh `odom → base_footprint → base_scan`, tốc
+   độ/timestamp `/odom` và `/scan` tăng đều theo `/clock`, không có transform
+   cũ hoặc extrapolation.

@@ -1,4 +1,4 @@
-# Báo cáo so sánh hai cấu hình SLAM Toolbox
+# LTRB_GK — Báo cáo so sánh hai cấu hình SLAM Toolbox
 
 ## Mục tiêu
 

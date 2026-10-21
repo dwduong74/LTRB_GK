@@ -7,6 +7,11 @@ Gazebo Harmonic. Mỗi lượt dùng lidar 2D `/scan`, odometry Gazebo và cùng
 phân giải map 0,05 m/ô. Map được lưu bằng `nav2_map_server/map_saver_cli` và
 so sánh bằng `tb3_slam_map_analysis/compare_maps`.
 
+Thí nghiệm gồm **hai world độc lập**. Trong mỗi world, robot chạy một lượt với
+baseline và một lượt với high-fidelity, rồi mới so sánh hai map của chính
+world đó. Vì hình học và kích thước của hai world khác nhau, tỷ lệ sai khác
+giữa lượt 1 và lượt 2 không được dùng để xếp hạng trực tiếp chất lượng map.
+
 Hai profile được dùng:
 
 | Profile | File cấu hình |
@@ -42,7 +47,7 @@ Các tham số `solver_plugin`, Ceres solver, scan matching, correlation search,
 giữ nguyên. Vì vậy chúng không phải nguyên nhân trực tiếp tạo khác biệt giữa
 hai profile trong thí nghiệm này.
 
-## Lượt chạy 1: world tiêu chuẩn, phạm vi nhỏ
+## Lượt chạy 1: `turtlebot3_world` mặc định, phạm vi nhỏ
 
 | Chỉ số | Baseline | High-fidelity |
 | --- | ---: | ---: |
@@ -97,18 +102,20 @@ Kết quả từ [`baseline2_vs_high_fidelity2/comparison_report.md`](baseline2_
 | Vùng sai khác từ 4 ô trở lên | 48 |
 | Vùng lớn nhất | 831 ô = 2,078 m² |
 
-High-fidelity có biên map thấp hơn baseline **3,01 m theo Y** và cao hơn 61
-hàng lưới. Điều này chứng tỏ lượt high-fidelity đã bao phủ thêm một vùng đáng
-kể của maze, hoặc pose graph của hai lượt đã đặt map frame khác nhau. Vì map
-high-fidelity chứa toàn bộ phạm vi của baseline, công cụ không đếm ô ngoài
-phạm vi chung; tuy nhiên khác biệt về độ bao phủ vẫn ảnh hưởng mạnh tới số ô
-đỏ trong phần diện tích chung.
+Đây là lượt đo thứ hai, thực hiện trong maze lớn và phức tạp hơn world mặc
+định ở lượt 1. Trong chính lượt maze, map high-fidelity có biên thấp hơn map
+baseline **3,01 m theo Y** và cao hơn 61 hàng lưới. Điều này cho thấy hai lần
+lái trong cùng maze có độ bao phủ khác nhau, hoặc pose graph đã đặt map frame
+khác nhau. Vì map high-fidelity chứa toàn bộ phạm vi của baseline, công cụ
+không đếm ô ngoài phạm vi chung; tuy nhiên khác biệt độ bao phủ vẫn ảnh hưởng
+mạnh tới số ô đỏ trong phần diện tích chung.
 
 Các cụm sai khác lớn trải dài theo hàng mét, không còn là vài pixel mép tường
 như lượt 1. Nguyên nhân hợp lý nhất là tổng hợp của ba yếu tố:
 
 1. Robot được lái thủ công qua hai tuyến hoặc quãng đường không hoàn toàn
-   giống nhau; world lớn có nhiều nhánh nên chênh lệch này tăng nhanh.
+   giống nhau trong cùng maze; world lớn có nhiều nhánh nên chênh lệch này
+   tăng nhanh.
 2. High-fidelity thêm node scan dày hơn và thử loop closure rộng/sớm hơn. Khi
    tối ưu pose graph, các tường đã quét trước đó có thể dịch vài ô so với
    baseline, tạo dải đỏ dài.
@@ -149,12 +156,14 @@ Ghi chú chi tiết: [`complex_world_runtime_report.md`](../Lap_trinh_robot/bcr_
 
 ## Kết luận
 
-1. Với world nhỏ và cùng phạm vi quét, hai profile rất gần nhau: sai khác
+1. Trong `turtlebot3_world` mặc định nhỏ và cùng phạm vi quét, hai profile rất gần nhau: sai khác
    1,10% và chỉ có hai cụm rất nhỏ.
-2. Profile high-fidelity phù hợp khi cần bản đồ chi tiết hơn ở góc, cửa, lối
+2. Với `tb3_complex_maze` lớn hơn, sai khác 6,91% không được so trực tiếp với
+   1,10% của world mặc định; geometry, diện tích khám phá và tuyến lái đã khác.
+3. Profile high-fidelity phù hợp khi cần bản đồ chi tiết hơn ở góc, cửa, lối
    hẹp và world lớn, với chi phí CPU/RAM cao hơn và thời gian tối ưu pose graph
    dài hơn.
-3. Lượt maze cho sai khác 6,91%, chủ yếu phản ánh thực nghiệm chưa đồng nhất
+4. Lượt maze cho sai khác 6,91%, chủ yếu phản ánh thực nghiệm chưa đồng nhất
    về độ bao phủ/tuyến lái cùng với độ nhạy cao hơn của loop closure; đây chưa
    phải bằng chứng định lượng rằng một profile chính xác hơn profile kia.
 
